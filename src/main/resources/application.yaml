@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: ContentManagementApi
+app:
+  storage:
+    path: "D:\\Development\\ContentManagementApiStorage"
+  instructions:
+    path: doc/instructions
+langchain4j:
+  open-ai:
+    chat-model:
+      api-key:
+      model-name: gpt-3.5-turbo
+      temperature: '0.7'
+      response-format: json_object
+      log-requests: true
+      log-responses: true
+logging:
+  level:
+    dev:
+      langchain4j: DEBUG
+      ai4j:
+        openai4j: DEBUG
+management:
+  endpoints:
+    web:
+      exposure:
+        include: mappings
+

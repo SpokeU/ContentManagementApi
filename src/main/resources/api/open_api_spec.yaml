@@ -1,0 +1,10 @@
+openapi: 3.0.1
+info:
+  title: Instructions Processing API
+  version: 1.0.0
+  description: This API is intended to be used by LLM to act as a bridge to outside wrold
+servers:
+  - url: 'https://da6f-194-44-57-227.ngrok-free.app'
+paths:
+  /instructions-processing:
+    $ref: './paths/instructions_processing.yaml'

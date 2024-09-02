@@ -1,0 +1,9 @@
+type: object
+properties:
+  status:
+    type: string
+    enum: ["PROCESSED"]
+    example: "PROCESSED"
+  message:
+    type: string
+    example: "User.java created"

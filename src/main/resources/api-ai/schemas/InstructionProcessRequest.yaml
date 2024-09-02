@@ -1,0 +1,7 @@
+type: object
+required:
+  - instructions
+properties:
+  instructions:
+    type: string
+    example: "# Content update instructions\\n\\n**Change Summary:**\\nAdd user model into domain. Removing deprecated account functionality\\n**Project:** DataHub\\n**Component:** Backend\\n\\n---\\nOperation: `Create`\\nResource: `src/main/java/api/model/User.java`\\nContent:\\n\\n```java\\npublic class User {\\n    private UUID id;\\n    private String name;\\n    private String email;\\n}\\n```"

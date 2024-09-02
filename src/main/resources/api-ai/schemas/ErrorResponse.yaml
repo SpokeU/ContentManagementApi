@@ -1,0 +1,8 @@
+type: object
+properties:
+  code:
+    type: string
+    example: "24.USR"
+  message:
+    type: string
+    example: "Unable to process text"

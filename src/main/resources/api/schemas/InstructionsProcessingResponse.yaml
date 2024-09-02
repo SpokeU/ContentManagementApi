@@ -1,0 +1,15 @@
+title: Instructions Processing Response
+type: object
+properties:
+  status:
+    type:
+      $ref: './ProcessingStatusEnum.yaml'
+    description: Status of the instructions processing
+    example: "PROCESSED"
+  message:
+    type: string
+    description: Human-readable result of processing
+    example: "10 Files updates successfully"
+required:
+  - status
+  - message
