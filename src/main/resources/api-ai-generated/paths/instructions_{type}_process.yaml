@@ -1,0 +1,25 @@
+post:
+  operationId: processInstruction
+  summary: Process a specific instruction type
+  tags:
+    - instructions
+  parameters:
+    - $ref: '../parameters/path/type.yaml'
+  requestBody:
+    description: Instruction processing input
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "../schemas/InstructionProcessRequest.yaml"
+  responses:
+    200:
+      description: Instruction processed successfully
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/InstructionProcessResponse.yaml"
+    400:
+      $ref: '../schemas/ErrorResponse.yaml'
+    500:
+      $ref: '../schemas/ErrorResponse.yaml'

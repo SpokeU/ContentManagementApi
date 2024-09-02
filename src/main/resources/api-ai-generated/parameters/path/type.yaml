@@ -1,0 +1,7 @@
+name: type
+in: path
+required: true
+description: The type of instruction to process (e.g., CONTENT_UPDATE, SCRIPT_EXECUTION)
+schema:
+  type: string
+  example: "CONTENT_UPDATE"

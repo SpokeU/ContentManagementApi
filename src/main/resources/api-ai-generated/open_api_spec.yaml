@@ -1,0 +1,18 @@
+openapi: 3.0.3
+info:
+  title: Content Management API
+  version: "1.0.0"
+  description: API for LLM-based content management, including discovery, instruction processing, and text handling.
+servers:
+  - url: https://api.example.com
+paths:
+  /instructions:
+    $ref: './paths/instructions.yaml'
+  /instructions/{type}/process:
+    $ref: './paths/instructions_{type}_process.yaml'
+  /text/process:
+    $ref: './paths/text_process.yaml'
+components:
+  responses:
+    ErrorResponse:
+      $ref: './schemas/ErrorResponse.yaml'
