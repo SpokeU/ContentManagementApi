@@ -1,20 +1,16 @@
 package dev.omyshko.contentmanagement.instructions.changelog;
 
-import dev.omyshko.contentmanagement.api.exception.ApiException;
 import dev.omyshko.contentmanagement.core.model.Component;
 import dev.omyshko.contentmanagement.core.model.Project;
 import dev.omyshko.contentmanagement.core.service.GitContentManager;
 import dev.omyshko.contentmanagement.core.service.ProjectsRepository;
-import dev.omyshko.contentmanagement.instructions.InstructionsProcessor;
+import dev.omyshko.contentmanagement.instructions.ResponseProcessor;
 import dev.omyshko.contentmanagement.instructions.changelog.model.ChangeLog;
 import dev.omyshko.contentmanagement.instructions.changelog.model.Operation;
-import dev.omyshko.contentmanagement.instructions.model.INSTRUCTIONS_TYPE;
+import dev.omyshko.contentmanagement.instructions.model.RESPONSE_FORMAT;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 /**
  * Responsible for knowing how to handle ChangeLog instructions returned by LLM.
@@ -25,7 +21,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 @Service
-public class ChangeLogProcessor implements InstructionsProcessor {
+public class ChangeLogProcessor implements ResponseProcessor {
 
     private final ChangeLogParser changeLogParser;
 
@@ -36,10 +32,6 @@ public class ChangeLogProcessor implements InstructionsProcessor {
     @Override
     public ProcessingResult process(String text) {
         ChangeLog changeLog = changeLogParser.extract(text);
-
-        Project project = projects.find(changeLog.getHeader().getProject());
-        Component component = projects.find(changeLog.getHeader().getProject(), changeLog.getHeader().getComponent());
-
         //TODO Find out type of processor
         //component.getLocation() check type
         ProcessingResult processingResult = gitService.processChangeLog(changeLog);
@@ -84,8 +76,8 @@ public class ChangeLogProcessor implements InstructionsProcessor {
     }*/
 
     @Override
-    public INSTRUCTIONS_TYPE getProcessedType() {
-        return INSTRUCTIONS_TYPE.CONTENT_UPDATE;
+    public RESPONSE_FORMAT getProcessedType() {
+        return RESPONSE_FORMAT.CHANGE_LOG;
     }
 
 }

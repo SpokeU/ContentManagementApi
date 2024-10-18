@@ -8,3 +8,15 @@ servers:
 paths:
   /instructions-processing:
     $ref: './paths/instructions_processing.yaml'
+  /knowledge-base:
+    $ref: './paths/knowledge-base.yaml'
+  /knowledge-base/search:
+    $ref: './paths/knowledge-base_search.yaml'
+  /tasks/start:
+    $ref: './paths/tasks_start.yaml'
+  /tasks:
+    $ref: './paths/tasks.yaml'
+  /tasks/{id}/status:
+    $ref: './paths/tasks_id_status.yaml'
+
+

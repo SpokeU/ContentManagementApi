@@ -1,9 +1,9 @@
 package dev.omyshko.contentmanagement.instructions.classification;
 
-import dev.omyshko.contentmanagement.instructions.model.INSTRUCTIONS_TYPE;
+import dev.omyshko.contentmanagement.instructions.model.RESPONSE_FORMAT;
 
 public interface InstructionClassificator {
 
-    INSTRUCTIONS_TYPE classify(String instructions);
+    RESPONSE_FORMAT classify(String instructions);
 
 }

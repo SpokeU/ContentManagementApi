@@ -1,0 +1,23 @@
+post:
+  operationId: search
+  summary: Search based on text
+  description: Search for any additional information in knowledge base based on the input text provided
+  requestBody:
+    content:
+      text/plain:
+        schema:
+          type: string
+      application/json:
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+    required: true
+  responses:
+    200:
+      description: Successful processing response
+      content:
+        text/plain:
+          schema:
+            type: string

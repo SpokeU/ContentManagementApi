@@ -1,0 +1,11 @@
+title: Task model
+description: Full task model
+x-model: Task
+type: object
+properties:
+  id:
+    type: string
+    description: Task ID by which you can access LLM processing logs and its progress. Or interfere task lik stop if needed
+    example: "12311-12312-123123-123123"
+  status:
+    $ref: './task_status.yaml'

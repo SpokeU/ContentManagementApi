@@ -1,9 +1,8 @@
 package dev.omyshko.contentmanagement.core.service;
 
-import dev.omyshko.contentmanagement.api.exception.ApiException;
 import dev.omyshko.contentmanagement.core.model.Component;
 import dev.omyshko.contentmanagement.core.model.Project;
-import dev.omyshko.contentmanagement.instructions.InstructionsProcessor;
+import dev.omyshko.contentmanagement.instructions.ResponseProcessor;
 import dev.omyshko.contentmanagement.instructions.changelog.model.ChangeLog;
 import dev.omyshko.contentmanagement.instructions.changelog.model.Operation;
 import jakarta.annotation.PostConstruct;
@@ -20,7 +19,6 @@ import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
@@ -39,21 +37,28 @@ import static org.eclipse.jgit.lib.FileMode.REGULAR_FILE;
 public class GitContentManager {
 
     String username = "SpokeU";
-    String password = "";
+
+    @Value("${GIT_API_KEY}")
+    String password;
 
     private final String storagePath;
-    private final ProjectsRepository projects;
+    private final ProjectsRepository projectsRepo;
 
     public GitContentManager(@Value("${app.storage.path:}") String storagePath, ProjectsRepository projects) {
         this.storagePath = storagePath;
-        this.projects = projects;
+        this.projectsRepo = projects;
     }
 
     //TODO Do initialization of git repos async
     @PostConstruct
     public void init() {
-        Project project = projects.find("DataHub");
-        syncProject(project);
+        List<Project> availableProjects = projectsRepo.findAll();
+
+        for (Project project : availableProjects) {
+            syncProject(project);
+            //TODO error handling
+        }
+
     }
 
     public void syncProject(Project project) {
@@ -87,15 +92,15 @@ public class GitContentManager {
             } catch (Exception e) {
                 String message = "Error while syncing project:" + project + " component:" + component;
                 log.error(message, e);
-                throw new ApiException(message, HttpStatus.INTERNAL_SERVER_ERROR);
+                throw new RuntimeException(message, e);
             }
         }
     }
 
-    public InstructionsProcessor.ProcessingResult processChangeLog(ChangeLog changeLog) {
+    public ResponseProcessor.ProcessingResult processChangeLog(ChangeLog changeLog) {
         //1 Prepare stuff
-        Project project = projects.find(changeLog.getHeader().getProject());
-        Component component = projects.find(changeLog.getHeader().getProject(), changeLog.getHeader().getComponent());
+        Project project = projectsRepo.find(changeLog.getHeader().getProject());
+        Component component = projectsRepo.find(changeLog.getHeader().getProject(), changeLog.getHeader().getComponent());
         String mainBranch = "master";
         String targetBranch = changeLog.getHeader().getBranch();
 
@@ -137,7 +142,6 @@ public class GitContentManager {
                     .call();
 
             git.checkout()
-                    .setCreateBranch(true)
                     .setName(mainBranch)
                     .call();
         } catch (IOException | GitAPIException e) {
@@ -148,7 +152,7 @@ public class GitContentManager {
         //return to master branch
 
 
-        return new InstructionsProcessor.ProcessingResult("Ok very nice");//TODO form proper message
+        return new ResponseProcessor.ProcessingResult("Ok very nice");//TODO form proper message
     }
 
 

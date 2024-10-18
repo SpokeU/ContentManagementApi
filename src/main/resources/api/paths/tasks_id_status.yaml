@@ -1,0 +1,29 @@
+post:
+  operationId: changeTaskStatus
+  summary: Change task status
+  parameters:
+    - name: id
+      in: path
+      description: Id of task
+      required: true
+      schema:
+        type: string
+  requestBody:
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            status:
+              $ref: '../schemas/task_status.yaml'
+            comment:
+              type: string
+              description: any info that goes with status
+    required: true
+  responses:
+    200:
+      description: Change status task. The task is being processed asynchronously.
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/task.yml"

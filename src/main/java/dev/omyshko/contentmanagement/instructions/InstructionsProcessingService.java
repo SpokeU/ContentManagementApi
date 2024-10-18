@@ -1,7 +1,7 @@
 package dev.omyshko.contentmanagement.instructions;
 
 import dev.omyshko.contentmanagement.instructions.classification.InstructionClassificator;
-import dev.omyshko.contentmanagement.instructions.model.INSTRUCTIONS_TYPE;
+import dev.omyshko.contentmanagement.instructions.model.RESPONSE_FORMAT;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -13,10 +13,10 @@ public class InstructionsProcessingService {
 
     private final InstructionProcessorRegistry registry;
 
-    public InstructionsProcessor.ProcessingResult processInstructions(String instructions) {
-        INSTRUCTIONS_TYPE type = classificator.classify(instructions);
-        InstructionsProcessor processor = registry.getProcessor(type);
-        InstructionsProcessor.ProcessingResult processingResult = processor.process(instructions);
+    public ResponseProcessor.ProcessingResult processInstructions(String instructions) {
+        RESPONSE_FORMAT type = classificator.classify(instructions);
+        ResponseProcessor processor = registry.getProcessor(type);
+        ResponseProcessor.ProcessingResult processingResult = processor.process(instructions);
 
         return processingResult;
     }

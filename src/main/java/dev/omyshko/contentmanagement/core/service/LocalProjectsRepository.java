@@ -29,8 +29,21 @@ public class LocalProjectsRepository implements ProjectsRepository {
                 "Content Management API",
                 "Centralized platform for managing database connections, sharing queries, executing them, and presenting results in a user-friendly manner.",
                 List.of(
-                        new Component("Content Management API", "Java Backend service", ComponentType.BACKEND, "https://github.com/SpokeU/DataHub.git")
+                        new Component("Content Management API", "Java Backend service", ComponentType.BACKEND, "https://github.com/SpokeU/ContentManagementApi.git")
                 )));
+
+
+        projects.add(new Project(
+                "AI Playground",
+                "Sample Repository for AI commits",
+                List.of(
+                        new Component("Backend", "Java Backend service", ComponentType.BACKEND, "https://github.com/SpokeU/AiPlayground.git")
+                )));
+    }
+
+    @Override
+    public List<Project> findAll() {
+        return projects;
     }
 
     @Override

@@ -1,20 +1,25 @@
 spring:
   application:
     name: ContentManagementApi
+  web:
+    resources:
+      static-locations:
+        - classpath:/api/
 app:
   storage:
     path: "D:\\Development\\ContentManagementApiStorage"
-  instructions:
-    path: doc/instructions
+  knowledge-base:
+    path: knowledge-base
 langchain4j:
   open-ai:
     chat-model:
-      api-key:
-      model-name: gpt-3.5-turbo
+      api-key: ${OPENAI_API_KEY}
+      model-name: gpt-4o
       temperature: '0.7'
-      response-format: json_object
       log-requests: true
       log-responses: true
+      response-format: json_object
+      timeout: 200000
 logging:
   level:
     dev:
@@ -26,4 +31,8 @@ management:
     web:
       exposure:
         include: mappings
-
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    url: /open_api_spec.yaml

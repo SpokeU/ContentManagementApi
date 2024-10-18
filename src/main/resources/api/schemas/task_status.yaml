@@ -1,0 +1,2 @@
+type: string
+enum: [ "OPEN", "READY_FOR_PROCESSING", "WAITING_FOR_USER_INPUT" ]

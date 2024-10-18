@@ -1,0 +1,34 @@
+post:
+  operationId: createTask
+  summary: Submit LLM task
+  description: Search for any additional information in knowledge base based on the input text provided
+  parameters:
+    - in: query
+      name: project
+      schema:
+        type: string
+      description: Project name to which this task relates to
+    - in: query
+      name: component
+      schema:
+        type: string
+      description: Component name to which this task relates to
+  requestBody:
+    content:
+      text/plain:
+        schema:
+          type: string
+      application/json:
+        schema:
+          type: object
+          properties:
+            message:
+              type: string
+    required: true
+  responses:
+    200:
+      description: Successful submit of a task. The task is being processed asynchronously.
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/task.yml"

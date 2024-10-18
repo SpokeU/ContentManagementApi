@@ -17,4 +17,10 @@ public class Project {
 
     private List<Component> components;
     //Any additional field
+
+
+    //TODO Implement
+    public String getAbbreviatedName() {
+        return "TEST";
+    }
 }

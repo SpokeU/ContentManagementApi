@@ -1,0 +1,18 @@
+get:
+  operationId: getKnowledgeBaseInfo
+  summary: Search based on text
+  description: Search for any additional information in knowledge base based on the input text provided
+  parameters:
+    - name: topicCodes
+      in: query
+      description: CSV topic codes to extract
+      required: false
+      schema:
+        type: string
+  responses:
+    200:
+      description: Table of contents or specific topic info if 'topicCodes' are provided
+      content:
+        text/plain:
+          schema:
+            type: string

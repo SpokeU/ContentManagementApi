@@ -3,9 +3,8 @@ package dev.omyshko.contentmanagement.api.endpoint;
 
 import dev.omyshko.contentmanagement.api.InstructionsProcessingApiDelegate;
 import dev.omyshko.contentmanagement.api.model.InstructionsProcessingResponse;
-import dev.omyshko.contentmanagement.api.model.ProcessingStatusEnum;
 import dev.omyshko.contentmanagement.instructions.InstructionsProcessingService;
-import dev.omyshko.contentmanagement.instructions.InstructionsProcessor;
+import dev.omyshko.contentmanagement.instructions.ResponseProcessor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -25,8 +24,8 @@ public class InstructionProcessingEndpoint implements InstructionsProcessingApiD
 
     @Override
     public ResponseEntity<InstructionsProcessingResponse> processInstructions(String body) {
-        InstructionsProcessor.ProcessingResult processingResult = instructionsProcessingService.processInstructions(body);
-        return ResponseEntity.ok(new InstructionsProcessingResponse().status(ProcessingStatusEnum.PROCESSED).message(processingResult.message()));
+        ResponseProcessor.ProcessingResult processingResult = instructionsProcessingService.processInstructions(body);
+        return ResponseEntity.ok(new InstructionsProcessingResponse().status(InstructionsProcessingResponse.StatusEnum.PROCESSED).message(processingResult.message()));
     }
 
     @Override

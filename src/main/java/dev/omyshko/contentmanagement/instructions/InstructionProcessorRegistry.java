@@ -1,7 +1,7 @@
 package dev.omyshko.contentmanagement.instructions;
 
 import dev.omyshko.contentmanagement.api.exception.ApiException;
-import dev.omyshko.contentmanagement.instructions.model.INSTRUCTIONS_TYPE;
+import dev.omyshko.contentmanagement.instructions.model.RESPONSE_FORMAT;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -15,20 +15,20 @@ import java.util.Map;
 @Component
 public class InstructionProcessorRegistry {
 
-    private final Map<INSTRUCTIONS_TYPE, InstructionsProcessor> processorMap = new EnumMap<>(INSTRUCTIONS_TYPE.class);
+    private final Map<RESPONSE_FORMAT, ResponseProcessor> processorMap = new EnumMap<>(RESPONSE_FORMAT.class);
 
-    private final List<InstructionsProcessor> processors;
+    private final List<ResponseProcessor> processors;
 
     @PostConstruct
     public void init() {
         // Register each processor with its corresponding enum type
-        for (InstructionsProcessor processor : processors) {
+        for (ResponseProcessor processor : processors) {
             processorMap.put(processor.getProcessedType(), processor);
         }
     }
 
-    public InstructionsProcessor getProcessor(INSTRUCTIONS_TYPE type) {
-        InstructionsProcessor instructionProcessor = processorMap.get(type);
+    public ResponseProcessor getProcessor(RESPONSE_FORMAT type) {
+        ResponseProcessor instructionProcessor = processorMap.get(type);
 
         if (instructionProcessor == null) {
             throw new ApiException("No such instruction processor type: " + type, HttpStatus.BAD_REQUEST);

@@ -2,8 +2,8 @@ title: Instructions Processing Response
 type: object
 properties:
   status:
-    type:
-      $ref: './ProcessingStatusEnum.yaml'
+    type: string
+    enum: [ "PROCESSED", "FAILED" ]
     description: Status of the instructions processing
     example: "PROCESSED"
   message:
