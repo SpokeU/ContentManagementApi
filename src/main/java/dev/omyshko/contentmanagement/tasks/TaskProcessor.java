@@ -59,7 +59,7 @@ public class TaskProcessor {
         taskActivityLogService.write(taskEntity.getId(), TaskActivityLogService.Action.INTERMEDIATE_PROCESSING_RESULT, knowledgeBaseMaterials, "Knowledge base materials");
 
         //Merge task and knowledge base info into single string
-        String projectInfo = ContentStringUtils.wrap(generateTaskProjectInfo(taskEntity), "project-info");
+        String projectInfo = ContentStringUtils.wrap(generateTaskProjectInfo(taskEntity), "project-info");//TODO rename
         String taskWrapped = ContentStringUtils.wrap(fullTask, "task");
         String kbMaterialsWrapped = ContentStringUtils.wrap(knowledgeBaseMaterials, "knowledge-base");
         String taskWithKnowledge = String.join("\n", projectInfo, taskWrapped, kbMaterialsWrapped);
@@ -75,6 +75,7 @@ public class TaskProcessor {
         return String.join("\n ======================= \n", taskWithKnowledge, aiResponse/*, processingResult.message()*/);
     }
 
+    //TODO rename
     private String generateTaskProjectInfo(TaskEntity taskEntity) {
         return String.join("\n",
                 "Project: " + taskEntity.getProject().getName(),
