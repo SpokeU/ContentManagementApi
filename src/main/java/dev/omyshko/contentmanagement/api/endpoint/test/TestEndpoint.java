@@ -1,6 +1,7 @@
 package dev.omyshko.contentmanagement.api.endpoint.test;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.langchain4j.data.message.UserMessage;
@@ -20,6 +21,10 @@ import dev.omyshko.contentmanagement.knowledgebase.KnowledgeBaseInformationProvi
 import dev.omyshko.contentmanagement.knowledgebase.KnowledgeBaseService;
 import dev.omyshko.contentmanagement.knowledgegraph.schema.BlockSchemaParser;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.neo4j.driver.AuthTokens;
+import org.neo4j.driver.GraphDatabase;
+import org.neo4j.driver.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,7 +35,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
+import java.util.*;
 
 import static dev.langchain4j.model.chat.request.ResponseFormatType.JSON;
 
@@ -45,7 +50,8 @@ public class TestEndpoint {
     @Value("${OPENAI_API_KEY}")
     private String apiKey;
 
-    @Value("${app.knowledge-base.path:}") String knowledgeBasePath;
+    @Value("${app.knowledge-base.path:}")
+    String knowledgeBasePath;
 
     @Autowired
     private KnowledgeBaseService knowledgeBaseService;
@@ -81,8 +87,8 @@ public class TestEndpoint {
                 .name("JavaLanguageBlocks") // OpenAI requires specifying the name for the schema
                 .rootElement(JsonObjectSchema.builder()
                         .description("A list of blocks. A **block** is a unit of information with a specific purpose and a defined structure.") //TODO remove?
-                        .addProperty("classes", classesArraySchema)
-                        .addProperty("methods", methodsArraySchema)
+                        .addProperty("declared_classes", classesArraySchema)
+                        .addProperty("declared_methods", methodsArraySchema)
                         .build()
                 ).build();
 
@@ -93,7 +99,7 @@ public class TestEndpoint {
 
 
         dev.langchain4j.data.message.SystemMessage systemMessage = dev.langchain4j.data.message.SystemMessage.from(
-        "You are a tool for extracting blocks of code that are present in a provided file according to schema.");
+                "You are a tool for extracting blocks of code that are present in a provided file according to schema.");
 
         PromptTemplate promptTemplate = PromptTemplate.from("Here is the file content <file-content>{{it}}</file-content>");
         String apply = promptTemplate.apply(content).text();
@@ -121,11 +127,115 @@ public class TestEndpoint {
         String output = chatResponse.aiMessage().text();
 
 
-        return ResponseEntity.ok(new ObjectMapper().readTree(output));
+        JsonNode response = new ObjectMapper().readTree(output);
+
+        storeNodeToNeo4J(response);
+
+
+        return ResponseEntity.ok(response);
+    }
+
+
+    private void storeNodeToNeo4J(JsonNode jsonNode) {
+        // URI examples: "neo4j://localhost", "neo4j+s://xxx.databases.neo4j.io"
+
+
+        try (var driver = GraphDatabase.driver(dbUri, AuthTokens.basic(dbUser, dbPassword))) {
+            driver.verifyConnectivity();
+            Session session = driver.session();
+            createNode(session, jsonNode);
+
+        }
+    }
+
+    private void createNode(Session session, JsonNode jsonNode) {
+        Map<String, Object> nodeData = new ObjectMapper().convertValue(jsonNode, new TypeReference<Map<String, Object>>() {
+        });
+
+        for (JsonNode blocksArrays : jsonNode) {
+            for (JsonNode block : blocksArrays) {
+                storeBlock(session, block);
+            }
+        }
+
+
+    }
+
+    private void storeBlock(Session session, JsonNode node) {
+        String id = node.get("id").asText();
+        String name = node.get("name").asText();
+        Map<String, List<String>> fields = extractFieldsAndValues(node, "fields", null);
+
+        Map<String, List<String>> dependencies = extractFieldsAndValues(node, "dependencies", null);
+        List<Map<String, String>> dependenciesParameter = new ArrayList<>();
+        for(Map.Entry<String, List<String>> block : dependencies.entrySet()) {
+            block.getValue().forEach(v -> dependenciesParameter.add(Map.of("type", block.getKey(), "targetId", v)));
+        }
+
+        Map<String, List<String>> dependenciesNodeParameters = extractFieldsAndValues(node, "dependencies", "dependencies");
+
+
+
+/*        Map<String, Object> classifiers = objectMapper.convertValue(node.get("classifiers"), new TypeReference<Map<String, Object>>() {
+        });*/
+
+        String mergeQuery = "MERGE (source {id: $id}) " +
+                            "SET source += $fields, source += $dependenciesParameters " +
+                            "SET source:" + name + " ";
+        String query = mergeQuery + """
+                WITH source
+                UNWIND $dependencies AS dependency
+                MERGE (target {id: dependency.targetId})
+                ON CREATE SET
+                    target.name = "Placeholder"
+                WITH source, target, dependency
+                CALL apoc.create.relationship(source, dependency.type, {}, target) YIELD rel
+                RETURN source, target, rel;
+                """;
+
+        session.executeWrite(tx -> {
+            tx.run(query,
+
+                    Map.of("id", id,
+                            "fields", fields,
+                            "dependencies", dependenciesParameter,
+                            "dependenciesParameters", dependenciesNodeParameters));
+            return null;
+        });
+    }
+
+    public Map<String, List<String>> extractFieldsAndValues(JsonNode jsonNode, String fieldToExtract, String prefix) {
+        Map<String, List<String>> fields = new HashMap<>();
+
+        Iterator<Map.Entry<String, JsonNode>> fieldsIterator = jsonNode.get(fieldToExtract).fields();
+
+        while (fieldsIterator.hasNext()) {
+            Map.Entry<String, JsonNode> fieldEntry = fieldsIterator.next();
+            String fieldName = fieldEntry.getKey();
+            List<String> values = extractArrayValues(fieldEntry.getValue());
+
+
+            String fieldNameToStore = prefix != null ? prefix + "." + fieldName : fieldName;
+            fields.put(fieldNameToStore, values);
+        }
+
+        return fields;
+    }
+
+    public List<String> extractArrayValues(JsonNode jsonNode) {
+        List<String> values = new ArrayList<>();
+        Iterator<JsonNode> elements = jsonNode.elements();
+        while (elements.hasNext()) {
+            JsonNode element = elements.next();
+            values.add(element.asText()); // Convert each element to String and add to ArrayList
+        }
+
+        return values;
     }
 
     /**
      * Does not allow dynamic adding though KB. Bad approach
+     *
      * @param fileName
      * @return
      */

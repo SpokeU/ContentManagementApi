@@ -31,6 +31,9 @@ management:
     web:
       exposure:
         include: mappings
+  health:
+    neo4j:
+      enabled: false
 springdoc:
   api-docs:
     enabled: true

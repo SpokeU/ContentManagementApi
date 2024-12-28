@@ -55,7 +55,7 @@ public class GitContentManager {
         List<Project> availableProjects = projectsRepo.findAll();
 
         for (Project project : availableProjects) {
-            syncProject(project);
+            //syncProject(project); //TODO enable when needed
             //TODO error handling
         }
 

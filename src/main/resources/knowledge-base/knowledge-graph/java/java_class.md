@@ -59,7 +59,7 @@ This is in addition to main block name to be able to navigate graph using differ
 
 ## Dependencies
 
-### declared_methods
+### declares_method
 If this class declares a method then fully qualified signature has to used. List all declared methods here 
 For example: 'dev.omyshko.usermanagementsystem.service.UserController#toApiModel(Long, UserEntity)'
 
