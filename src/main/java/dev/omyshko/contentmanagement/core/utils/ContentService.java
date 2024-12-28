@@ -81,8 +81,4 @@ public class ContentService {
         return link.startsWith("http");
     }
 
-    public String getLocalContent() {
-        return "";
-    }
-
 }

@@ -1,0 +1,181 @@
+{
+  "type": "json_schema",
+  "json_schema": {
+    "name": "JavaBlocks",
+    "strict": true,
+    "schema": {
+      "type": "object",
+      "properties": {
+        "classes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "description": "A block which represents java Class",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Fully qualified class name. For example `dev.omyshko.contentmanagement.core.service.GitContentManager`"
+              },
+              "name": {
+                "type": "string",
+                "description": "Should be always equal to `class`"
+              },
+              "fields": {
+                "type": "object",
+                "description": "Field values",
+                "properties": {
+                  "class_package": {
+                    "type": "string",
+                    "description": "Example - `dev.omyshko.contentmanagement.core.service`"
+                  },
+                  "className": {
+                    "type": "string",
+                    "description": "Class name. Example - GitContentManager"
+                  },
+                  "content": {
+                    "type": "string",
+                    "description": "Important! Class content with All methods should be replaced with `...`\nShould include only package declaration, annotations,class declaration, variables and static blocks.\nExample -\n        ```\n        package dev.omyshko.contentmanagement.core.service;\n        import dev.omyshko.contentmanagement.core.model.Component;\n        import dev.omyshko.contentmanagement.core.model.Project;\n\n        @Slf4j\n        @Service\n        public class GitContentManager {\n\n            String username = \"SpokeU\";\n\n            @Value(\"${GIT_API_KEY}\")\n            String password;\n\n            private final String storagePath;\n            private final ProjectsRepository projectsRepo;\n\n            public GitContentManager(@Value(\"${app.storage.path:}\") String storagePath, ProjectsRepository projects) {\n                this.storagePath = storagePath;\n                this.projectsRepo = projects;\n            }\n\n            ...\n\n        }\n        ```\n"
+                  }
+                },
+                "required": [
+                  "class_package",
+                  "className",
+                  "content"
+                ],
+                "additionalProperties": false
+              },
+              "classifiers": {
+                "type": "array",
+                "description": "Additional classifiers for text block. Can be one of: ### Controller\n### SpringBean\n### Entity\n### Repository",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "dependencies": {
+                "type": "object",
+                "description": "List all dependencies based on schema",
+                "properties": {
+                  "declaresMethod": {
+                    "type": "array",
+                    "description": "Declared methods fully qualified signatures\nFor example: 'dev.omyshko.usermanagementsystem.service.UserController#toApiModel(Long, UserEntity)'\n",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "declaresMethod"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "fields",
+              "classifiers",
+              "dependencies"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "methods": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "description": "A block which represents java method",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Fully qualified method signature name. For example `dev.omyshko.usermanagementsystem.service.UserController#toApiModel(UserEntity, Long)`"
+              },
+              "name": {
+                "type": "string",
+                "description": "Should be always equal to `method`"
+              },
+              "fields": {
+                "type": "object",
+                "description": "Field values",
+                "properties": {
+                  "return_type": {
+                    "type": "array",
+                    "description": "Might be an array because if contains generics\n\"Example - `dev.omyshko.usermanagementsystem.api.model.UserApiModel`",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "method_signature": {
+                    "type": "string",
+                    "description": "Example - `toApiModel(UserEntity, Long)`"
+                  },
+                  "content": {
+                    "type": "string",
+                    "description": "       Should include a method with javadoc if available\n          ```java\n          /**\n           * Creating a user\n           */\n          @PostMapping\n          public ResponseEntity<UserApiModel> createUser(@RequestBody UserEntity userEntity) {\n              UserEntity savedUser = userService.saveUser(userEntity);\n              return ResponseEntity.ok(toApiModel(savedUser));\n          }\n          ```\n"
+                  }
+                },
+                "required": [
+                  "return_type",
+                  "method_signature",
+                  "content"
+                ],
+                "additionalProperties": false
+              },
+              "classifiers": {
+                "type": "array",
+                "description": "Additional classifiers for text block. Can be one of: ### EntryPoint - Any functionality that can be triggered. For example APIs, Jobs, Messaging can be treated as EntryPoint.\n### RequestHandler\n### getter\n### setter",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "dependencies": {
+                "type": "object",
+                "properties": {
+                  "inputArgument": {
+                    "type": "array",
+                    "description": "            Description: Input arguments for this method. Might be an array because if contains generics\n            Value: List of fully qualified argument names\n",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "returnType": {
+                    "type": "array",
+                    "description": "             Fully qualified return type. Might be an array because if return type contains generics.\n             Example: [`org.springframework.http.ResponseEntity`, `dev.omyshko.usermanagementsystem.api.model.UserApiModel`]\n",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "calls": {
+                    "type": "array",
+                    "description": "             If this method calls other method. Should be {Fully_qualified_class}#{method_signature}. Example: `['dev.omyshko.usermanagementsystem.service.UserService#saveUser(UserEntity)', 'dev.omyshko.usermanagementsystem.service.UserController#toApiModel(UserEntity)']`\n",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "inputArgument",
+                  "returnType",
+                  "calls"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "fields",
+              "classifiers",
+              "dependencies"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "classes",
+        "methods"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

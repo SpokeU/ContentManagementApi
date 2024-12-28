@@ -1,0 +1,20 @@
+post:
+  operationId: processProject
+  summary: Process project
+  description: Process all components related to this project. Populate Knowledge Graph, create indexes etc. Everything that needs to be done to be able to effectively solve tasks. Thing of it as getting familiar to codebase before working on it
+  requestBody:
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            project_name:
+              type: string
+    required: true
+  responses:
+    200:
+      description: Successful start of a task. The task is being processed asynchronously.
+      content:
+        text/plain:
+          schema:
+            type: string

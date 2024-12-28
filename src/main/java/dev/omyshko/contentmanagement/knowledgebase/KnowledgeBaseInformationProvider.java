@@ -109,6 +109,36 @@ public class KnowledgeBaseInformationProvider {
         return contentService.unwrapLinks(indexFileContent, topicFolder);
     }
 
+    /**
+     * TODO Refactor KB and Create KnowledgeNode
+     *
+     * <pre>
+     * public class KnowledgeNode {
+     *     private String code;
+     *     private Map<String, KnowledgeNode> children;
+     *     public void addChild(String name, KnowledgeNode child) {
+     *         this.children.put(name, child);
+     *     }
+     * }
+     * </pre>
+     *
+     * @param pageCode
+     * @return
+     */
+/*    public String getPageContent(String pageCode) {
+        return null;
+    }*/
+
+    /**
+     * Temporary solution utils KnowledgeNodes are implemented
+     * @param filePath
+     * @return
+     */
+    public String getPageContent(String filePath) {
+        Path path = Paths.get(getBaseFolderPath().toString(), filePath);
+        return contentService.getLocalContent(path);
+    }
+
     private @NotNull Path getBaseFolderPath() {
         try {
             return Paths.get(this.getClass().getClassLoader().getResource(knowledgeBasePath).toURI());

@@ -37,7 +37,7 @@ Usually contains examples, conventions and information about specific technologi
 
 ### Topic
 Все про що можна говорити і описувати. OpeanApi, Java Backned, IATA Spec etc...
-Має ідентифікатор і набір інформації. ЇЇ можна описати багатьма способами.
+Має ідентифікатор і набір інформації.
 
 ### Response Format
 The format which is expected from LLM as an output. 
@@ -47,8 +47,9 @@ Usually contains short explanation of its usage and examples
 
 Extensive documentation of a project that will be used by LLM to search for required functionality and code based on user input (or task definition).  
 Think of it as project high level description having reference to all [functionalities](#project-functionalities) and project structure. 
-Which can be used as starting point of discovery to search for required code based on user input.  
-Project documentation - Example here:  [Project info example](project-info.md)
+Which can be used as entry point to search for required code based on user input. 
+After entering code domain to navigate by code a dependency graph + generated javadocs are used.  
+Project documentation is also minimal spec - Example here:  [Project info example](project-info/project-info.md)
 
 ### Project functionalities
 A detailed overview of all executable functionalities within the project, categorized by their trigger mechanisms. (REST APIs, Scheduled Jobs, Messaging etc.)
@@ -81,5 +82,9 @@ Current Task - Quality of life- Додати Нове поле до Існуюч
   - Можна застосувати Vector Search TODO
 - Додати тести на критичні речі search, unwrapContent,
 
+
+Neo4j pass: 2G-iSlY4rlfxJf3zMI6fb1bkNgKtTtPeMZ2yRGprX3Q
+
 ## Startup parameters
 OPENAI_API_KEY - OpenAI Api key
+

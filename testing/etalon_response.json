@@ -1,0 +1,163 @@
+{
+  "classes": [
+    {
+      "id": "dev.omyshko.usermanagementsystem.api.model.UserController",
+      "name": "class",
+      "fields": {
+        "class_package": "dev.omyshko.usermanagementsystem.api.model",
+        "className": "UserController",
+        "content": "        package dev.omyshko.usermanagementsystem.api.model;\n        import dev.omyshko.usermanagementsystem.entity.UserEntity;\n        import dev.omyshko.usermanagementsystem.service.UserService;\n        import org.springframework.beans.factory.annotation.Autowired;\n        import org.springframework.http.ResponseEntity;\n        import org.springframework.web.bind.annotation.*;\n        import java.util.List;\n        import java.util.Optional;\n        import java.util.stream.Collectors;\n\n        @RestController\n        @RequestMapping(\"/users\")\n        public class UserController {\n\n            @Autowired\n            private UserService userService;\n\n            ...\n\n        }"
+      },
+      "classifiers": [
+        "Controller"
+      ],
+      "dependencies": {
+        "declaresMethod": [
+          "dev.omyshko.usermanagementsystem.api.model.UserController#createUser(UserEntity)",
+          "dev.omyshko.usermanagementsystem.api.model.UserController#getAllUsers()",
+          "dev.omyshko.usermanagementsystem.api.model.UserController#getUserById(Long)",
+          "dev.omyshko.usermanagementsystem.api.model.UserController#deleteUser(Long)",
+          "dev.omyshko.usermanagementsystem.api.model.UserController#toApiModel(UserEntity)"
+        ]
+      }
+    }
+  ],
+  "methods": [
+    {
+      "id": "dev.omyshko.usermanagementsystem.api.model.UserController#createUser(UserEntity)",
+      "name": "method",
+      "fields": {
+        "return_type": [
+          "org.springframework.http.ResponseEntity",
+          "dev.omyshko.usermanagementsystem.api.model.UserApiModel"
+        ],
+        "method_signature": "createUser(UserEntity)",
+        "content": "          @PostMapping\n          public ResponseEntity<UserApiModel> createUser(@RequestBody UserEntity userEntity) {\n              UserEntity savedUser = userService.saveUser(userEntity);\n              return ResponseEntity.ok(toApiModel(savedUser));\n          }\n"
+      },
+      "classifiers": [
+        "EntryPoint",
+        "RequestHandler"
+      ],
+      "dependencies": {
+        "inputArgument": [
+          "dev.omyshko.usermanagementsystem.entity.UserEntity"
+        ],
+        "returnType": [
+          "org.springframework.http.ResponseEntity",
+          "dev.omyshko.usermanagementsystem.api.model.UserApiModel"
+        ],
+        "calls": [
+          "dev.omyshko.usermanagementsystem.service.UserService#saveUser(UserEntity)",
+          "dev.omyshko.usermanagementsystem.api.model.UserController#toApiModel(UserEntity)"
+        ]
+      }
+    },
+    {
+      "id": "dev.omyshko.usermanagementsystem.api.model.UserController#getAllUsers()",
+      "name": "method",
+      "fields": {
+        "return_type": [
+          "org.springframework.http.ResponseEntity",
+          "java.util.List",
+          "dev.omyshko.usermanagementsystem.api.model.UserApiModel"
+        ],
+        "method_signature": "getAllUsers()",
+        "content": "          @GetMapping\n          public ResponseEntity<List<UserApiModel>> getAllUsers() {\n              List<UserEntity> users = userService.getAllUsers();\n              List<UserApiModel> userApiModels = users.stream()\n                      .map(this::toApiModel)\n                      .collect(Collectors.toList());\n              return ResponseEntity.ok(userApiModels);\n          }\n"
+      },
+      "classifiers": [
+        "EntryPoint",
+        "RequestHandler"
+      ],
+      "dependencies": {
+        "inputArgument": [],
+        "returnType": [
+          "org.springframework.http.ResponseEntity",
+          "java.util.List",
+          "dev.omyshko.usermanagementsystem.api.model.UserApiModel"
+        ],
+        "calls": [
+          "dev.omyshko.usermanagementsystem.service.UserService#getAllUsers()",
+          "dev.omyshko.usermanagementsystem.api.model.UserController#toApiModel(UserEntity)"
+        ]
+      }
+    },
+    {
+      "id": "dev.omyshko.usermanagementsystem.api.model.UserController#getUserById(Long)",
+      "name": "method",
+      "fields": {
+        "return_type": [
+          "org.springframework.http.ResponseEntity",
+          "dev.omyshko.usermanagementsystem.api.model.UserApiModel"
+        ],
+        "method_signature": "getUserById(Long)",
+        "content": "          @GetMapping(\"/{id}\")\n          public ResponseEntity<UserApiModel> getUserById(@PathVariable Long id) {\n              Optional<UserEntity> user = userService.getUserById(id);\n              return user.map(value -> ResponseEntity.ok(toApiModel(value)))\n                      .orElseGet(() -> ResponseEntity.notFound().build());\n          }\n"
+      },
+      "classifiers": [
+        "EntryPoint",
+        "RequestHandler"
+      ],
+      "dependencies": {
+        "inputArgument": [
+          "java.lang.Long"
+        ],
+        "returnType": [
+          "org.springframework.http.ResponseEntity",
+          "dev.omyshko.usermanagementsystem.api.model.UserApiModel"
+        ],
+        "calls": [
+          "dev.omyshko.usermanagementsystem.service.UserService#getUserById(Long)",
+          "dev.omyshko.usermanagementsystem.api.model.UserController#toApiModel(UserEntity)"
+        ]
+      }
+    },
+    {
+      "id": "dev.omyshko.usermanagementsystem.api.model.UserController#deleteUser(Long)",
+      "name": "method",
+      "fields": {
+        "return_type": [
+          "org.springframework.http.ResponseEntity",
+          "java.lang.Void"
+        ],
+        "method_signature": "deleteUser(Long)",
+        "content": "          @DeleteMapping(\"/{id}\")\n          public ResponseEntity<Void> deleteUser(@PathVariable Long id) {\n              userService.deleteUser(id);\n              return ResponseEntity.noContent().build();\n          }\n"
+      },
+      "classifiers": [
+        "EntryPoint",
+        "RequestHandler"
+      ],
+      "dependencies": {
+        "inputArgument": [
+          "java.lang.Long"
+        ],
+        "returnType": [
+          "org.springframework.http.ResponseEntity",
+          "java.lang.Void"
+        ],
+        "calls": [
+          "dev.omyshko.usermanagementsystem.service.UserService#deleteUser(Long)"
+        ]
+      }
+    },
+    {
+      "id": "dev.omyshko.usermanagementsystem.api.model.UserController#toApiModel(UserEntity)",
+      "name": "method",
+      "fields": {
+        "return_type": [
+          "dev.omyshko.usermanagementsystem.api.model.UserApiModel"
+        ],
+        "method_signature": "toApiModel(UserEntity)",
+        "content": "        // Convert Entity to API Model\n        private UserApiModel toApiModel(UserEntity userEntity) {\n            String fullName = userEntity.getFirstName() + \" \" + userEntity.getLastName();\n            return new UserApiModel(userEntity.getId(), fullName, userEntity.getEmail());\n        }\n"
+      },
+      "classifiers": [],
+      "dependencies": {
+        "inputArgument": [
+          "dev.omyshko.usermanagementsystem.entity.UserEntity"
+        ],
+        "returnType": [
+          "dev.omyshko.usermanagementsystem.api.model.UserApiModel"
+        ],
+        "calls": []
+      }
+    }
+  ]
+}

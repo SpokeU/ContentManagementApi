@@ -2,7 +2,7 @@ openapi: 3.0.1
 info:
   title: Instructions Processing API
   version: 1.0.0
-  description: This API is intended to be used by LLM to act as a bridge to outside wrold
+  description: This API is intended to be used by LLM to act as a bridge to outside world
 servers:
   - url: 'https://da6f-194-44-57-227.ngrok-free.app'
 paths:
@@ -18,5 +18,7 @@ paths:
     $ref: './paths/tasks.yaml'
   /tasks/{id}/status:
     $ref: './paths/tasks_id_status.yaml'
+  /projects/process:
+    $ref: './paths/projects_process.yaml'
 
 
