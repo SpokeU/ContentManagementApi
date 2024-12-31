@@ -1,12 +1,10 @@
 package dev.omyshko.contentmanagement.knowledgegraph.schema;
 
+import com.google.gson.JsonObject;
 import com.vladsch.flexmark.ast.Heading;
 import com.vladsch.flexmark.ast.Text;
 import com.vladsch.flexmark.util.ast.Node;
-import dev.langchain4j.model.chat.request.json.JsonArraySchema;
-import dev.langchain4j.model.chat.request.json.JsonObjectSchema;
-import dev.langchain4j.model.chat.request.json.JsonSchema;
-import dev.langchain4j.model.chat.request.json.JsonStringSchema;
+import dev.langchain4j.model.chat.request.json.*;
 import dev.langchain4j.model.output.structured.Description;
 import org.apache.commons.lang3.StringUtils;
 
@@ -30,15 +28,8 @@ public class BlockSchemaParser {
         MarkdownSection fieldsSection = getSection(knowledgeBasePage, "Fields");
         List<MarkdownSection> fields = getSectionlist(fieldsSection.allContent).stream().map(s -> getSection(fieldsSection.allContent(), s.name())).toList();
 
-        MarkdownSection classifiersSection = getSection(knowledgeBasePage, "Classifiers");
-        List<MarkdownSection> classifiers = getSectionlist(classifiersSection.allContent).stream().map(s -> getSection(classifiersSection.allContent(), s.name())).toList();
-        List<String> classifiersList = classifiers.stream().map(c -> c.label +"\r\n" + c.allContent).toList();
-        String classifiersDescription = classifiersSection.textContent + ". Can be only one of: \n" + String.join("\n", classifiersList);
-
-
         MarkdownSection dependenciesSection = getSection(knowledgeBasePage, "Dependencies");
-        List<MarkdownSection> dependencies = getSectionlist(dependenciesSection.allContent).stream().map(s -> getSection(dependenciesSection.allContent(), s.name())).toList();
-
+        List<MarkdownSection> dependencies = getSectionlist(dependenciesSection.allContent, dependenciesSection.level + "#").stream().map(s -> getSection(dependenciesSection.allContent(), s.name())).toList();
 
 
         //1 get Overview
@@ -55,15 +46,37 @@ public class BlockSchemaParser {
         }
         fieldsBuilder.required(fields.stream().map(f -> f.name).toList());
 
-        //General classifiers purpose. + content
-        JsonArraySchema classifiersArraySchema = JsonArraySchema.builder().description(classifiersDescription)
-                .items(JsonStringSchema.builder().build())
-                .build();
-
         JsonObjectSchema.Builder dependenciesBuilder = JsonObjectSchema.builder().description("List all dependencies based on schema");//Add description what fields are
         for (MarkdownSection dependency : dependencies) {
+            //### calls
+            //figure out if dependency is an
+            JsonSchemaElement dependencyItem = JsonStringSchema.builder().build();
+
+            List<MarkdownSection> dependencySections = getSectionlist(dependency.allContent);
+            if (dependencySections.size() > 0) {
+                JsonObjectSchema.Builder dependencyItemBuilder = JsonObjectSchema.builder().description(dependency.textContent);
+
+                for (MarkdownSection dependencySection : dependencySections) {
+                    String dependencySectionDescription = getSection(dependency.allContent, dependencySection.name).textContent;
+                    JsonSchemaElement dependencySectionItem = JsonStringSchema.builder().description(dependencySectionDescription).build();
+
+
+                    if(dependencySectionDescription.contains("type:array")){
+                        dependencySectionItem = JsonArraySchema.builder().description(dependencySectionDescription)
+                                .items(JsonStringSchema.builder().build()) //The item of the dependency
+                                .build();
+                    }
+
+                    dependencyItemBuilder.addProperty(dependencySection.name, dependencySectionItem);
+                }
+
+                dependencyItemBuilder.required(dependencySections.stream().map(f -> f.name).toList());
+                dependencyItem = dependencyItemBuilder.build();
+            }
+
+
             JsonArraySchema dependenciesArray = JsonArraySchema.builder().description(dependency.textContent)
-                    .items(JsonStringSchema.builder().build())
+                    .items(dependencyItem) //The item of the dependency
                     .build();
             dependenciesBuilder.addProperty(dependency.name, dependenciesArray);
         }
@@ -75,7 +88,7 @@ public class BlockSchemaParser {
                 .addStringProperty("id", id.textContent())
                 .addStringProperty("name", name.textContent())
                 .addProperty("fields", fieldsBuilder.build())
-                .addProperty("classifiers", classifiersArraySchema)
+                //.addProperty("classifiers", classifiersArraySchema)
                 .addProperty("dependencies", dependenciesBuilder.build())
                 .required("id", "name", "fields", "classifiers", "dependencies")
                 .build();
@@ -123,7 +136,7 @@ public class BlockSchemaParser {
 
         //Get allContent without section header
         int sectionContentStartPosition = startSection.startPosition + startSection.label().length();
-        int sectionContentEndPosition = sectionlist.indexOf(startSection) == sectionlist.size() -1 ?
+        int sectionContentEndPosition = sectionlist.indexOf(startSection) == sectionlist.size() - 1 ?
                 knowledgeBasePage.length() : sectionlist.get(sectionlist.indexOf(startSection) + 1).startPosition;
         int sectionEndPosition = endSection != null && endSection.startPosition >= 0 ? endSection.startPosition() : knowledgeBasePage.length();
 
@@ -139,6 +152,18 @@ public class BlockSchemaParser {
     private List<MarkdownSection> getSectionlist(String knowledgeBasePage) {
         List<MarkdownSection> sections = new ArrayList<>();
         Pattern pattern = Pattern.compile("^(#+) (.*)", Pattern.MULTILINE);
+        Matcher matcher = pattern.matcher(knowledgeBasePage);
+
+        while (matcher.find()) {
+            sections.add(new MarkdownSection(matcher.group(1), matcher.group(2).trim(), matcher.group(0), matcher.start(), "", ""));
+        }
+
+        return sections;
+    }
+
+    private List<MarkdownSection> getSectionlist(String knowledgeBasePage, String sectionLevel) {
+        List<MarkdownSection> sections = new ArrayList<>();
+        Pattern pattern = Pattern.compile("^("+sectionLevel+") (.*)", Pattern.MULTILINE);
         Matcher matcher = pattern.matcher(knowledgeBasePage);
 
         while (matcher.find()) {

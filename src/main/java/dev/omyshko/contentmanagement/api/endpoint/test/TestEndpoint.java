@@ -1,7 +1,6 @@
 package dev.omyshko.contentmanagement.api.endpoint.test;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.langchain4j.data.message.UserMessage;
@@ -10,9 +9,9 @@ import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.request.ResponseFormat;
 import dev.langchain4j.model.chat.request.json.*;
 import dev.langchain4j.model.chat.response.ChatResponse;
-import dev.langchain4j.model.input.Prompt;
 import dev.langchain4j.model.input.PromptTemplate;
 import dev.langchain4j.model.openai.OpenAiChatModel;
+import dev.langchain4j.model.openai.OpenAiChatModelName;
 import dev.langchain4j.model.output.structured.Description;
 import dev.langchain4j.service.AiServices;
 import dev.langchain4j.service.SystemMessage;
@@ -20,13 +19,13 @@ import dev.langchain4j.service.V;
 import dev.omyshko.contentmanagement.knowledgebase.KnowledgeBaseInformationProvider;
 import dev.omyshko.contentmanagement.knowledgebase.KnowledgeBaseService;
 import dev.omyshko.contentmanagement.knowledgegraph.schema.BlockSchemaParser;
+import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.neo4j.driver.AuthTokens;
-import org.neo4j.driver.GraphDatabase;
-import org.neo4j.driver.Session;
+import org.neo4j.driver.*;
+import org.neo4j.driver.Record;
+import org.neo4j.driver.types.Node;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -36,15 +35,22 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static dev.langchain4j.model.chat.request.ResponseFormatType.JSON;
+import static dev.langchain4j.model.openai.OpenAiChatModelName.GPT_4_O;
+import static dev.langchain4j.model.openai.OpenAiChatModelName.GPT_4_O_MINI;
 
+@Slf4j
 @RestController
 @RequestMapping("/test")
 public class TestEndpoint {
 
+    public static final String DB_URI = "neo4j+s://6a2ca604.databases.neo4j.io";
+    public static final String DB_USER = "neo4j";
+    public static final String DB_PASSWORD = "";
+
     @Autowired
-    @Qualifier("openAiChatModel")
     private ChatLanguageModel chatLanguageModel;
 
     @Value("${OPENAI_API_KEY}")
@@ -59,16 +65,65 @@ public class TestEndpoint {
     @Autowired
     private KnowledgeBaseInformationProvider knowledgeBaseInformationProvider;
 
+    private Driver driver;
+
+    @PostConstruct
+    public void init() {
+        driver = GraphDatabase.driver(DB_URI, AuthTokens.basic(DB_USER, DB_PASSWORD));
+    }
+
+    @GetMapping("test_build_schema")
+    public ResponseEntity<JsonNode> testBuildSchema() throws IOException {
+        //Описання структури не вникаючи в блоки!!!
+        //
+        //2. Get Blocks description from KB
+        String methodsContent = knowledgeBaseInformationProvider.getPageContent("knowledge-graph\\java\\java_method.md");
+        JsonObjectSchema methodsBlockSchema = new BlockSchemaParser().convert(methodsContent);
+        return ResponseEntity.ok(null);
+    }
+
+    private String prependLineNumbers(Path path) throws IOException {
+        List<String> lines = Files.readAllLines(path);
+        StringBuilder result = new StringBuilder();
+        AtomicInteger lineNumber = new AtomicInteger(1);
+
+        lines.forEach(line -> {
+            // Print line with its number
+            result.append(String.format("%03d: %s%n", lineNumber.getAndIncrement(), line));
+        });
+
+        return result.toString();
+    }
+
+
     @GetMapping("test_parse_using_kb")
     public ResponseEntity<JsonNode> testFileParseUsingKb(@RequestParam String filePath) throws IOException {
+        //TODO Choose model based on file size? Larger files extraction doing better on 4o while smaller blocks can be used with 4o-mini
+        //I'm changing approach to HOW TO ANALYZE <BLOCK_NAME>
+
+        //1. Split file into root blocks
+            //What to extract from java FILE ? = (Node:java_class {id: $id}) - [edge:$declares_method] > (Node:depepdency.name {id:$depepdency.method_signature} ),
+
+        //FOR rootBlock = rootBlocks -- Iterating though root entities.
+        //In case of java it will be single java class with relations to imports methods etc.
+        //But in typescript you can have multiple classes in one file
+
+            // 2. Split child blocks further recursively
+            // Iterate though root blocks dependencies (imports, methods, inner_classes etc. ) and split those recursively according to KB page of block name
+                // Expand content according line numbers
+
+
+
+
         //1. Search available Knowledge Base Graphs by subject KG (Knowledge Graph) based on File language and Main Frameworks
         Path pathToFile = Paths.get(filePath);
         FileType fileType = getFileType(pathToFile.getFileName().toString());
-        String content = new String(Files.readAllBytes(pathToFile));
+        //String content = new String(Files.readAllBytes(pathToFile));
+        String content = prependLineNumbers(pathToFile);
 
         //2. Get Blocks description from KB
-        String classesContent = knowledgeBaseInformationProvider.getPageContent("knowledge-graph\\java\\java_class.md");
-        String methodsContent = knowledgeBaseInformationProvider.getPageContent("knowledge-graph\\java\\java_method.md");
+        String classesContent = knowledgeBaseInformationProvider.getPageContent("knowledge-graph\\java\\java_class_lines.md");
+        String methodsContent = knowledgeBaseInformationProvider.getPageContent("knowledge-graph\\java\\java_method_lines.md");
 
         JsonObjectSchema classesBlockSchema = new BlockSchemaParser().convert(classesContent);
         JsonObjectSchema methodsBlockSchema = new BlockSchemaParser().convert(methodsContent);
@@ -88,7 +143,7 @@ public class TestEndpoint {
                 .rootElement(JsonObjectSchema.builder()
                         .description("A list of blocks. A **block** is a unit of information with a specific purpose and a defined structure.") //TODO remove?
                         .addProperty("declared_classes", classesArraySchema)
-                        .addProperty("declared_methods", methodsArraySchema)
+                        //.addProperty("declared_methods", methodsArraySchema) TODO methods
                         .build()
                 ).build();
 
@@ -115,11 +170,12 @@ public class TestEndpoint {
 
         ChatLanguageModel chatModel = OpenAiChatModel.builder() // see [1] below
                 .apiKey(apiKey)
-                .modelName("gpt-4o-mini")
+                .modelName(GPT_4_O)
                 .responseFormat("json_schema") // see [2] below
                 .strictJsonSchema(true) // see [2] below
                 .logRequests(true)
                 .logResponses(true)
+                .temperature(0.0)
                 .build();
 
         ChatResponse chatResponse = chatModel.chat(chatRequest);
@@ -129,46 +185,187 @@ public class TestEndpoint {
 
         JsonNode response = new ObjectMapper().readTree(output);
 
-        storeNodeToNeo4J(response);
+        //storeBlockToNeo4J(response);
 
 
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/describeGraph")
+    public ResponseEntity<String> describeGraphEndpoint() {
+        describeGraph();
+        return ResponseEntity.ok("OK");
+    }
 
-    private void storeNodeToNeo4J(JsonNode jsonNode) {
-        // URI examples: "neo4j://localhost", "neo4j+s://xxx.databases.neo4j.io"
+    @GetMapping("/describeNode")
+    public ResponseEntity<String> describeNodndpoint(@RequestParam String id) {
+        Node node = getNodeById(id);
+        String description = describeNode(node);
+        return ResponseEntity.ok(description);
+    }
 
+    private void describeGraph() {
+        //getTerminalNodes. //TODO Find terminal nodes for ID if we want to describe specific controller
+        //Describe each
+        //store description result into node
+        //Iterate and get closes siblings and repeat
 
-        try (var driver = GraphDatabase.driver(dbUri, AuthTokens.basic(dbUser, dbPassword))) {
+        try (var driver = GraphDatabase.driver(DB_URI, AuthTokens.basic(DB_USER, DB_PASSWORD))) {
             driver.verifyConnectivity();
             Session session = driver.session();
-            createNode(session, jsonNode);
+
+            List<Node> terminalNodes = session.executeRead(tx -> getTerminalNodes(tx));
+
+            for (Node terminalNode : terminalNodes) {
+                describeNode(terminalNode);
+            }
+            log.info("terminalNodes: {}", terminalNodes);
 
         }
     }
 
-    private void createNode(Session session, JsonNode jsonNode) {
-        Map<String, Object> nodeData = new ObjectMapper().convertValue(jsonNode, new TypeReference<Map<String, Object>>() {
+    private String describeNode(Node node) {
+        //What do I need to do to describe java_method?
+
+        //Get java class where its declared and wrap class around a method
+        //Get Input parameters
+        //Get Output parameters
+        //TODO If its not terminal then get everything that it calls
+
+        String declaration_class_query = "MATCH (N)<-[G:declares]-(M:java_class) WHERE N.id = $id RETURN M";
+        List<Node> declaring_java_class_node = queryNodes(declaration_class_query, Map.of("id", node.get("id").asString()));
+
+
+        return "";
+    }
+
+    private List<Node> getTerminalNodes(TransactionContext tx) {
+        String query = "MATCH (N)\n" +
+                       "WHERE NOT EXISTS { MATCH (n)-->() }\n" +
+                       "RETURN N";
+        Result result = tx.run(query);
+        List<Node> nodes = new ArrayList<>();
+        while (result.hasNext()) {
+            nodes.add(result.next().get("n").asNode());
+        }
+        return nodes;
+    }
+
+    private Node getNodeById(String id) {
+        String query = "MATCH (N) WHERE N.id = $id RETURN N";
+        return queryNodes(query, Map.of("id", id)).get(0);
+    }
+
+    private List<Node> queryNodes(String query, Map<String, Object> parameters) {
+        List<Node> nodes = driver.session().executeRead(tx -> {
+            Result result = tx.run(query, parameters);
+            List<Node> nodesResult = new ArrayList<>();
+            while (result.hasNext()) {
+                Record next = result.next();
+                List<Node> list = next.values().stream().map(v -> v.asNode()).toList();
+                nodesResult.addAll(list);
+            }
+            return nodesResult;
         });
 
+        return nodes;
+    }
+
+
+    private void storeBlockToNeo4J(JsonNode jsonNode) {
+        // URI examples: "neo4j://localhost", "neo4j+s://xxx.databases.neo4j.io"
+
+        try (var driver = GraphDatabase.driver(DB_URI, AuthTokens.basic(DB_USER, DB_PASSWORD))) {
+            driver.verifyConnectivity();
+            Session session = driver.session();
+            createNode(session, jsonNode);
+        }
+    }
+
+    private void createNode(Session session, JsonNode jsonNode) {
         for (JsonNode blocksArrays : jsonNode) {
             for (JsonNode block : blocksArrays) {
                 storeBlock(session, block);
             }
         }
-
-
     }
 
     private void storeBlock(Session session, JsonNode node) {
         String id = node.get("id").asText();
         String name = node.get("name").asText();
         Map<String, List<String>> fields = extractFieldsAndValues(node, "fields", null);
+        Map<String, List<String>> dependencies = extractFieldsAndValues(node, "dependencies", null);
+
+        //Create node for block
+        createNode(session, id, name, fields, dependencies);
+
+
+        //Handle dependencies
+        for (Map.Entry<String, List<String>> dependency : dependencies.entrySet()) {
+            String dependencyName = dependency.getKey();
+
+            for (String dependencyValue : dependency.getValue()) {
+                if (dependencyName.contains("calls")) {
+                    String[] classAndMethod = dependencyValue.split("#");
+
+                    //Create java_class
+                    createNode(session, classAndMethod[0], "java_class", Map.of());
+
+                    //Create java_method
+                    createNode(session, dependencyValue, "java_method", Map.of());
+
+                    //Make relation between those (java_class -> declares -> java_method)
+                    createConnection(session, classAndMethod[0], dependencyValue, "declares");
+
+                    //Make relation between current_node -> calls -> java_method
+                    createConnection(session, id, dependencyValue, "calls");
+                } else {
+                    createNode(session, dependencyValue, "placeholder", Map.of());
+                    createConnection(session, id, dependencyValue, dependencyName);
+                }
+            }
+
+        }
+
+    }
+
+    private void createNode(Session session, String id, String label, Map<String, List<String>>... fields) {
+        Map<String, List<String>> parameters = new HashMap<>();
+        Arrays.stream(fields).forEach(parameters::putAll);
+
+        String createNode = "MERGE (source {id: $id}) " +
+                            "SET source += $fields " +
+                            "SET source:" + label + " " +
+                            "RETURN source;";
+
+        log.info("Creating node id: {}, label: {}", id, label);
+        runSave(session, createNode, Map.of("id", id,
+                "fields", parameters));
+    }
+
+    private void createConnection(Session session, String fromId, String toId, String label) {
+        String query = "MATCH (from {id: $fromId}), (to {id: $toId}) " +
+                       "MERGE (from)-[:" + label + "]->(to)";
+
+        log.info("Creating connection from: {} to: {} label: {}", fromId, toId, label);
+        runSave(session, query, Map.of("fromId", fromId, "toId", toId));
+    }
+
+    private void runSave(Session session, String query, Map<String, Object> parameters) {
+        session.executeWrite(tx -> {
+            tx.run(query, parameters);
+            return null;
+        });
+    }
+
+    private void storeBlock_v1(Session session, JsonNode node) {
+        String id = node.get("id").asText();
+        String name = node.get("name").asText();
+        Map<String, List<String>> fields = extractFieldsAndValues(node, "fields", null);
 
         Map<String, List<String>> dependencies = extractFieldsAndValues(node, "dependencies", null);
         List<Map<String, String>> dependenciesParameter = new ArrayList<>();
-        for(Map.Entry<String, List<String>> block : dependencies.entrySet()) {
+        for (Map.Entry<String, List<String>> block : dependencies.entrySet()) {
             block.getValue().forEach(v -> dependenciesParameter.add(Map.of("type", block.getKey(), "targetId", v)));
         }
 

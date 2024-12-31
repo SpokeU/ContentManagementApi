@@ -27,34 +27,15 @@ public ResponseEntity<UserApiModel> createUser(@RequestBody UserEntity userEntit
     return ResponseEntity.ok(toApiModel(savedUser));
 }
 ```
-
-## Classifiers
-Is used for tagging information by some concepts.
-
-### entry_point
-Any functionality that can be triggered by user. All SpringController handler methods should be classified as entry_point, Jobs, Messaging can be treated as entry_point.
-
 ## Dependencies
 
-### calls
-If this method calls other method then extract below values for single called method. Each called method should be in separate array item
+### content_lines
 
-#### call_statement
-A call statement content
+#### from_line
+Line number where this method starts. javadoc or annotations should be captured as well
 
-#### fully_qualified_signature
-Fully qualified signature of called method
-Example: `dev.omyshko.usermanagementsystem.service.UserService#saveUser(UserEntity)`
-
-#### fully_qualified_input_arguments
-type:array
-Fully qualified class name of input parameters for called method
-Example: `['dev.omyshko.usermanagementsystem.entity.UserEntity', 'dev.omyshko.usermanagementsystem.api.model.UserApiModel']`
-
-#### fully_qualified_return_type
-type:array
-Fully qualified return type. If return type using generics then array should contain each type separately
-Example: `dev.omyshko.usermanagementsystem.entity.UserEntity`
+#### to_line
+Line where this method ends.
 
 ### input_argument
 Input arguments for this method. Might be an array because if contains generics
