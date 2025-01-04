@@ -113,3 +113,76 @@ List of blocks along with all the dependencies
   }
 ]
 ```
+
+# Issues
+
+# Important notes
+
+## Importance of proper field naming
+Field name is much more important then description.
+Also if you have two same field names in different entities (For example `id` of a user and address and those have different rules of forming)  it might mess those meaning the format of one `id` will mess up completely other field
+
+## Avoid nesting
+Try as flat structure of your JSON schema as possible.
+For example having below structure produces much better results than
+
+```json5
+{
+  "classBlocks": [
+    {
+      "id": "dev.omyshko.contentmanagement.knowledgebase.KnowledgeBaseInformationProvider",
+      "name": "KnowledgeBaseInformationProvider",
+      "declaredMethods": [
+        {
+          "fullyQualifiedSignature": "dev.omyshko.contentmanagement.knowledgebase.KnowledgeBaseInformationProvider.extractTopicCode(java.nio.file.Path)",
+          "javaDocStartingLine": "188",
+          "fromLine": "188",
+          "toLine": "202"
+        }
+      ],
+      "importBlock": {
+        "importId": "dev.omyshko.contentmanagement.knowledgebase.KnowledgeBaseInformationProvider_imports",
+        "fromLine": "3",
+        "toLine": "23}, "
+      }
+    }
+  ]
+}
+```
+
+Then this
+
+```json5
+{
+  "classBlocks": [
+    {
+      "id": "dev.omyshko.contentmanagement.knowledgebase.KnowledgeBaseInformationProvider",
+      "name": "KnowledgeBaseInformationProvider",
+      "dependencies": {
+        "declaredMethods": [
+          {
+            "fullyQualifiedSignature": "java.lang.String dev.omyshko.contentmanagement.knowledgebase.KnowledgeBaseInformationProvider.getTableOfContent()",
+            "javaDocStartingLine": "69",
+            "fromLine": "70",
+            "toLine": "88"
+          }
+        ],
+        "importBlock": {
+          "importId": "dev.omyshko.contentmanagement.knowledgebase.KnowledgeBaseInformationProvider_imports",
+          "fromLine": "3",
+          "toLine": "23}}, "
+        }
+      }
+    }
+  ]
+}
+
+```
+
+You can see it added a return type to fullyQualifiedSignature already while it shouldn't
+
+## Importance of formatting before processing
+LLM seems to perform much worse if a code is formatted in specific way. 
+For example if a throws in method declaration is declared in separate line it cannot figure out proper start & end of the method block.
+
+This leads to a preprocessing phase with formatting a code by specific formatting rules for best LLM results which are yet to find for each specific language and case

@@ -6,6 +6,8 @@ import com.vladsch.flexmark.ast.Text;
 import com.vladsch.flexmark.util.ast.Node;
 import dev.langchain4j.model.chat.request.json.*;
 import dev.langchain4j.model.output.structured.Description;
+import dev.omyshko.contentmanagement.knowledgebase.KnowledgeBaseInformationProvider;
+import dev.omyshko.contentmanagement.knowledgebase.KnowledgeBaseInformationProvider.KnowledgeBasePageNode;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
@@ -18,6 +20,48 @@ import java.util.regex.Pattern;
  * This is later to be used by LLM to extract response
  */
 public class BlockSchemaParser {
+
+    public JsonSchema convertToSchema(List<KnowledgeBasePageNode> knowledgeBasePage) {
+        List<JsonObjectSchema> languageBlockSchemas = knowledgeBasePage.stream().map(p -> convert(p.content())).toList();
+
+        JsonObjectSchema.Builder rootElement = JsonObjectSchema.builder();
+
+        for (JsonObjectSchema languageBlockSchema : languageBlockSchemas) {
+            JsonSchemaElement blocksList = JsonArraySchema.builder()
+                    .description("A list of blocks parsed from a file. A **block** is a unit of information with a specific purpose and a defined structure.")
+                    .items(languageBlockSchema)
+                    .build();
+
+            rootElement.addProperty("blocks", blocksList); //TODO Will be Critical. preferable to have proper name like declared_classes as its better for LLM
+        }
+
+
+        JsonSchema jsonSchema = JsonSchema.builder()
+                .name("LanguageBlocks") // OpenAI requires specifying the name for the schema
+                .rootElement(rootElement.build())
+                .build();
+
+        return jsonSchema;
+    }
+
+    public JsonSchema convertToSchema(KnowledgeBasePageNode knowledgeBasePage) {
+        JsonObjectSchema languageBlockSchema = convert(knowledgeBasePage.content());
+
+        JsonSchemaElement classesArraySchema = JsonArraySchema.builder()
+                .description("A list of blocks parsed from a file. A **block** is a unit of information with a specific purpose and a defined structure.")
+                .items(languageBlockSchema)
+                .build();
+
+        JsonSchema jsonSchema = JsonSchema.builder()
+                .name("LanguageBlocks") // OpenAI requires specifying the name for the schema
+                .rootElement(JsonObjectSchema.builder()
+                        .addProperty("blocks", classesArraySchema) //TODO preferable to have proper name like declared_classes as its better for LLM
+                        .build()
+                ).build();
+
+        return jsonSchema;
+
+    }
 
     public JsonObjectSchema convert(String knowledgeBasePage) {
         MarkdownSection overview = getSection(knowledgeBasePage, "Overview");
@@ -39,12 +83,12 @@ public class BlockSchemaParser {
 
         JsonObjectSchema.Builder fieldsBuilder = JsonObjectSchema.builder().description("");//Add description what fields are
         for (MarkdownSection field : fields) {
-            JsonArraySchema fieldArray = JsonArraySchema.builder().description(field.textContent)
+/*            JsonArraySchema fieldArray = JsonArraySchema.builder().description()
                     .items(JsonStringSchema.builder().build())
-                    .build();
-            fieldsBuilder.addProperty(field.name, fieldArray);
+                    .build();*/
+            fieldsBuilder.addStringProperty(field.name, field.textContent);
         }
-        fieldsBuilder.required(fields.stream().map(f -> f.name).toList());
+        fieldsBuilder.required(fields.stream().map(f -> f.name).toList());//TODO check for proper type : Array, String, Int
 
         JsonObjectSchema.Builder dependenciesBuilder = JsonObjectSchema.builder().description("List all dependencies based on schema");//Add description what fields are
         for (MarkdownSection dependency : dependencies) {
@@ -61,7 +105,7 @@ public class BlockSchemaParser {
                     JsonSchemaElement dependencySectionItem = JsonStringSchema.builder().description(dependencySectionDescription).build();
 
 
-                    if(dependencySectionDescription.contains("type:array")){
+                    if (dependencySectionDescription.contains("type:array")) {
                         dependencySectionItem = JsonArraySchema.builder().description(dependencySectionDescription)
                                 .items(JsonStringSchema.builder().build()) //The item of the dependency
                                 .build();
@@ -163,7 +207,7 @@ public class BlockSchemaParser {
 
     private List<MarkdownSection> getSectionlist(String knowledgeBasePage, String sectionLevel) {
         List<MarkdownSection> sections = new ArrayList<>();
-        Pattern pattern = Pattern.compile("^("+sectionLevel+") (.*)", Pattern.MULTILINE);
+        Pattern pattern = Pattern.compile("^(" + sectionLevel + ") (.*)", Pattern.MULTILINE);
         Matcher matcher = pattern.matcher(knowledgeBasePage);
 
         while (matcher.find()) {

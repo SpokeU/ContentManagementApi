@@ -2,7 +2,6 @@ package dev.omyshko.contentmanagement.knowledgebase;
 
 import dev.omyshko.contentmanagement.api.exception.ApiException;
 import dev.omyshko.contentmanagement.core.utils.ContentService;
-import dev.omyshko.contentmanagement.core.utils.ContentStringUtils;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -19,7 +18,6 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -130,13 +128,14 @@ public class KnowledgeBaseInformationProvider {
     }*/
 
     /**
-     * Temporary solution utils KnowledgeNodes are implemented
+     * Temporary solution until KnowledgeNodes are implemented
+     *
      * @param filePath
      * @return
      */
-    public String getPageContent(String filePath) {
+    public KnowledgeBasePageNode getPageContent(String filePath) {
         Path path = Paths.get(getBaseFolderPath().toString(), filePath);
-        return contentService.getLocalContent(path);
+        return new KnowledgeBasePageNode(contentService.getLocalContent(path));
     }
 
     private @NotNull Path getBaseFolderPath() {
@@ -200,6 +199,10 @@ public class KnowledgeBaseInformationProvider {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public record KnowledgeBasePageNode(String content){
+
     }
 
 }

@@ -76,6 +76,11 @@
 
         <dependency>
             <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-google-ai-gemini</artifactId>
+            <version>1.0.0-alpha1</version>
+        </dependency>
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-spring-boot-starter</artifactId>
             <version>${langchain4j.version}</version>
         </dependency>
@@ -118,6 +123,7 @@
             <artifactId>neo4j-java-driver</artifactId>
             <version>5.27.0</version>
         </dependency>
+
     </dependencies>
 
     <build>

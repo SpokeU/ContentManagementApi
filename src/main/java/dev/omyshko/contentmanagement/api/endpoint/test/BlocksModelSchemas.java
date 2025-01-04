@@ -24,10 +24,7 @@ public class BlocksModelSchemas {
     record ClassBlock(@Description("Fully qualified class name. For example `dev.omyshko.contentmanagement.core.service.GitContentManager`") String id,
                       @Description("Should be always equal to `class`") String name,
                       @Description("Field values") ClassFields fields,
-                      @Description("Additional classifiers for text block. Can be one of: ### Controller\n" +
-                              "### SpringBean\n" +
-                              "### Entity\n" +
-                              "### Repository") List<String> classifiers, @Description("List all dependencies based on schema") ClassDependencies dependencies) {
+                      @Description("List all class dependencies based on schema") ClassDependencies dependencies) {
     }
 
     record ClassFields(@Description("Example - `dev.omyshko.contentmanagement.core.service`") String class_package,

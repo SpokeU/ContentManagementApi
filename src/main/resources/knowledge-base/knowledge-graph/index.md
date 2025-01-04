@@ -10,6 +10,5 @@ Each block has
 
 - `id` - 
 - `name` - 
-- `fields` - 
-- `classifiers` - 
-- `dependencies` - 
+- `fields` - Is a fields of a node itself.
+- `dependencies` - Foe each dependency a related node will be created with id, relation_type, node_type
