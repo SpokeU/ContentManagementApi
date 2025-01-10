@@ -5,6 +5,12 @@ spring:
     resources:
       static-locations:
         - classpath:/api/
+  neo4j:
+    uri: neo4j+s://6a2ca604.databases.neo4j.io
+    authentication:
+      username: neo4j
+      password: CeCkmRS4il8LJyZpxj-6M2AgF10K8gTfQb3R2qqT4R4
+
 app:
   storage:
     path: "D:\\Development\\ContentManagementApiStorage"

@@ -1,13 +1,14 @@
-package dev.omyshko.contentmanagement.projectscanner;
+package dev.omyshko.contentmanagement.codeprocessor;
 
 import org.springframework.stereotype.Component;
 
 import java.nio.file.Path;
 
 @Component
-class TechnologyOverviewAnalyzer {
+public class ProjectStructureAnalyzer {
 
     public String analyze(Path path) {
         return null;
     }
+
 }

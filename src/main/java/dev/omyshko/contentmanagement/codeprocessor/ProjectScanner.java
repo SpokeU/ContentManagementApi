@@ -1,4 +1,4 @@
-package dev.omyshko.contentmanagement.projectscanner;
+package dev.omyshko.contentmanagement.codeprocessor;
 
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.omyshko.contentmanagement.api.exception.ApiException;

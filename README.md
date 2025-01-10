@@ -86,5 +86,7 @@ Current Task - Quality of life- Додати Нове поле до Існуюч
 Neo4j pass: 2G-iSlY4rlfxJf3zMI6fb1bkNgKtTtPeMZ2yRGprX3Q
 
 ## Startup parameters
+GIT_API_KEY - Used to sync projects from GIT
 OPENAI_API_KEY - OpenAI Api key
+GEMINI_API_KEY - Gemini Api key
 

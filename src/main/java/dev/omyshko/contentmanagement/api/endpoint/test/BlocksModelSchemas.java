@@ -11,7 +11,7 @@ public class BlocksModelSchemas {
     interface JavaBlocksExtractor {
 
         @SystemMessage("You are a tool for processing a code. Provided a file content please extract blocks according to schema. Extract only entities present in provided file.")
-        @dev.langchain4j.service.UserMessage("Here is the file content <file-content>{{file_content}}</file-content>")
+        @dev.langchain4j.service.UserMessage("Here is the file content <file-content>\n{{file_content}}\n</file-content>")
         JavaBlocks extractBlocks(@V("file_content") String fileContent);
 
     }

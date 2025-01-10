@@ -5,14 +5,21 @@ Two possible solutions to scan a project.
 
 Below is the solution for option 2
 
-## Step 1: Code Scanning and Block Identification
-Goal: Scan the codebase and break down files into logical blocks.
+## Step 1: Code Scanning and Block Identification - Стректурний Аналіз
+Goal: Scan the codebase and break down files into logical blocks based on file extension
 
 Solution: Block can be a whole while as it is, or it can be split to class definitions, methods etc.
 But the overall abstraction is that there are blocks of information and its relations. Based on content and relations, we will provide RAG for LLM request.
 _Note: Challenge will be to narrow context_
 
 File: Scan file one by one and build nodes without connections
+
+```markdown
+-block --parsed
+--childBlock - nonParsed
+--childBlock
+--childBlock
+```
 
 ## Step 2: Classification of Blocks
 Goal: Classify blocks into categories based on their functionality.  
@@ -118,9 +125,25 @@ List of blocks along with all the dependencies
 
 # Important notes
 
-## Importance of proper field naming
-Field name is much more important then description.
+## Importance of array description
+Example:  
+`@Description("Any inner records/classes/interfaces should be captured here") List<JavaInnerClass> declaredInnerClasses`
+
+Without description on array it Gemini would not capture inner records although inner item 
+`@Description("A declaration of Inner 'class', 'interface', 'record'.")  
+public record JavaInnerClass`   
+has a description to capture records.
+
+## Importance of proper field naming !!!
+Field name is much more important than description. In fact its so important I'm going to write it twice.  
 Also if you have two same field names in different entities (For example `id` of a user and address and those have different rules of forming)  it might mess those meaning the format of one `id` will mess up completely other field
+
+Examples:
+`declaredMethods` - Selects all declared methods including inner class methods although in description I specified that only topLevel method should be extracted
+`declaredTopLevelMethods` - And it selected only topLevel method without inner class methods which is what I wanted
+
+## Putting important instructions to general System message
+It seems Gemini doesn't give a damn about json_schema field description. But by putting instructions into a system or user message it starts to react. For example with innerClasses
 
 ## Avoid nesting
 Try as flat structure of your JSON schema as possible.
@@ -179,10 +202,29 @@ Then this
 
 ```
 
-You can see it added a return type to fullyQualifiedSignature already while it shouldn't
+You can see it added a return type to fullyQualifiedSignature already while it shouldn't. And it doesn't do it when structure is more flat
 
 ## Importance of formatting before processing
 LLM seems to perform much worse if a code is formatted in specific way. 
 For example if a throws in method declaration is declared in separate line it cannot figure out proper start & end of the method block.
 
 This leads to a preprocessing phase with formatting a code by specific formatting rules for best LLM results which are yet to find for each specific language and case
+
+## Different Models
+Different models produce different result. And where one may struggle the other won't have those issue but will have other.
+
+### Gemini
+#### Pros:
+More Consistent output. Even on larger files I get same output by calling it multiple times
+
+#### Cons:
+Completely ignores description of a field when using json_schema. This way any important instructions should be separate in PROMPT
+`
+"responseMimeType": "application/json",
+"responseSchema": {
+`
+
+### OpenAI
+#### Cons:
+Not consistent
+Skips closing brace of a method to capture

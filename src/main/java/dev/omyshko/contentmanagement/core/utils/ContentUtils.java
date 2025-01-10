@@ -11,22 +11,24 @@ import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Slf4j
 @Component
-public class ContentService {
+public class ContentUtils {
 
     public static final Pattern LINK_REGEX = Pattern.compile("\\[(.*?)\\]\\((.*?)\\)");
 
-    private final HttpClient httpClient = HttpClient.newHttpClient();
+    private static final HttpClient httpClient = HttpClient.newHttpClient();
 
     public String unwrapLinks(String content) {
         return unwrapLinks(content, null);
     }
 
-    public String unwrapLinks(String content, Path rootPath) {
+    public static String unwrapLinks(String content, Path rootPath) {
         Matcher contentMatcher = LINK_REGEX.matcher(content);
         StringBuilder resultContent = new StringBuilder();
 
@@ -53,7 +55,7 @@ public class ContentService {
     /**
      * Todo Multithreading etc..
      */
-    public String getWebContent(String urlString) {
+    public static String getWebContent(String urlString) {
         try {
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(urlString))
@@ -67,7 +69,7 @@ public class ContentService {
         }
     }
 
-    public String getLocalContent(Path path) {
+    public static String getLocalContent(Path path) {
         try {
             String fileContent = new String(Files.readAllBytes(path));
             return fileContent;
@@ -77,8 +79,33 @@ public class ContentService {
         }
     }
 
-    private boolean isWebLink(String link) {
+    private static boolean isWebLink(String link) {
         return link.startsWith("http");
+    }
+
+    /* --- */
+
+    public static String getLocalContentWithLineNumbers(Path pathToFile) {
+
+        try {
+            List<String> lines = Files.readAllLines(pathToFile);
+            String contentWithLines = merge(prependLineNumbers(lines));
+            return contentWithLines;
+        } catch (IOException e) {
+            log.error("Error getting content from local path {}", pathToFile, e);
+            return "";
+        }
+
+    }
+
+    public static List<String> prependLineNumbers(List<String> lines) {
+        AtomicInteger lineNumber = new AtomicInteger(1);
+        List<String> linesWithNumbers = lines.stream().map(line -> String.format("%03d: %s", lineNumber.getAndIncrement(), line)).toList();
+        return linesWithNumbers;
+    }
+
+    public static String merge(List<String> lines) {
+        return String.join("\n", lines);
     }
 
 }

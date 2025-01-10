@@ -1,7 +1,7 @@
 package dev.omyshko.contentmanagement.knowledgebase;
 
 import dev.omyshko.contentmanagement.api.exception.ApiException;
-import dev.omyshko.contentmanagement.core.utils.ContentService;
+import dev.omyshko.contentmanagement.core.utils.ContentUtils;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -33,16 +33,16 @@ public class KnowledgeBaseInformationProvider {
 
     private final String knowledgeBasePath;
 
-    private final ContentService contentService;
+    private final ContentUtils contentUtils;
 
     /**
      * Folder is an absolute path
      */
     private Map<String, Path> kbTopicCodeToFolder = new HashMap<>();
 
-    public KnowledgeBaseInformationProvider(@Value("${app.knowledge-base.path:}") String knowledgeBasePath, ContentService contentService) {
+    public KnowledgeBaseInformationProvider(@Value("${app.knowledge-base.path:}") String knowledgeBasePath, ContentUtils contentUtils) {
         this.knowledgeBasePath = knowledgeBasePath;
-        this.contentService = contentService;
+        this.contentUtils = contentUtils;
     }
 
     @PostConstruct
@@ -104,7 +104,7 @@ public class KnowledgeBaseInformationProvider {
         String indexFileContent = readIndexFile(topicFolder);
 
         //2. Replace links with actual content
-        return contentService.unwrapLinks(indexFileContent, topicFolder);
+        return contentUtils.unwrapLinks(indexFileContent, topicFolder);
     }
 
     /**
@@ -135,7 +135,7 @@ public class KnowledgeBaseInformationProvider {
      */
     public KnowledgeBasePageNode getPageContent(String filePath) {
         Path path = Paths.get(getBaseFolderPath().toString(), filePath);
-        return new KnowledgeBasePageNode(contentService.getLocalContent(path));
+        return new KnowledgeBasePageNode(contentUtils.getLocalContent(path));
     }
 
     private @NotNull Path getBaseFolderPath() {

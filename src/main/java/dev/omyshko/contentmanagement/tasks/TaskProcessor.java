@@ -3,7 +3,7 @@ package dev.omyshko.contentmanagement.tasks;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.omyshko.contentmanagement.api.model.TaskStatus;
 import dev.omyshko.contentmanagement.core.service.TaskActivityLogService;
-import dev.omyshko.contentmanagement.core.utils.ContentService;
+import dev.omyshko.contentmanagement.core.utils.ContentUtils;
 import dev.omyshko.contentmanagement.core.utils.ContentStringUtils;
 import dev.omyshko.contentmanagement.instructions.InstructionsProcessingService;
 import dev.omyshko.contentmanagement.instructions.ResponseProcessor;
@@ -22,7 +22,7 @@ public class TaskProcessor {
 
     private final TaskActivityLogService taskActivityLogService;
 
-    private final ContentService contentService;
+    private final ContentUtils contentUtils;
 
     private final KnowledgeBaseService knowledgeBaseService;
 
@@ -30,10 +30,10 @@ public class TaskProcessor {
 
     private final InstructionsProcessingService instructionsProcessingService;
 
-    public TaskProcessor(TasksLocalRepository tasksRepository, TaskActivityLogService taskActivityLogService, ContentService contentService, KnowledgeBaseService knowledgeBaseService, ChatLanguageModel chatLanguageModel, InstructionsProcessingService instructionsProcessingService) {
+    public TaskProcessor(TasksLocalRepository tasksRepository, TaskActivityLogService taskActivityLogService, ContentUtils contentUtils, KnowledgeBaseService knowledgeBaseService, ChatLanguageModel chatLanguageModel, InstructionsProcessingService instructionsProcessingService) {
         this.tasksRepository = tasksRepository;
         this.taskActivityLogService = taskActivityLogService;
-        this.contentService = contentService;
+        this.contentUtils = contentUtils;
         this.knowledgeBaseService = knowledgeBaseService;
         this.chatLanguageModel = chatLanguageModel;
         this.instructionsProcessingService = instructionsProcessingService;
@@ -51,7 +51,7 @@ public class TaskProcessor {
 
     private String processTask(TaskEntity taskEntity) {
         //Get content of all links and replace it in original task
-        String fullTask = contentService.unwrapLinks(taskEntity.getContent());
+        String fullTask = contentUtils.unwrapLinks(taskEntity.getContent());
         taskActivityLogService.write(taskEntity.getId(), TaskActivityLogService.Action.INTERMEDIATE_PROCESSING_RESULT, fullTask, "Links unwrapped");
 
         //Using knowledge base searches relevant info to complete a task

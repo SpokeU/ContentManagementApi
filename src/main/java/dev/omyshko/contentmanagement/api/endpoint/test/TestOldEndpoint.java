@@ -21,7 +21,7 @@ import dev.langchain4j.service.V;
 import dev.omyshko.contentmanagement.knowledgebase.KnowledgeBaseInformationProvider;
 import dev.omyshko.contentmanagement.knowledgebase.KnowledgeBaseService;
 import dev.omyshko.contentmanagement.knowledgegraph.schema.BlockSchemaParser;
-import dev.omyshko.contentmanagement.knowledgegraph.schema.KBSchemaModels;
+import dev.omyshko.contentmanagement.knowledgegraph.schema.JavaClassSchema;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
@@ -46,13 +46,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
 import static dev.langchain4j.model.chat.request.ResponseFormatType.JSON;
-import static dev.langchain4j.model.openai.OpenAiChatModelName.GPT_4_O;
 import static dev.langchain4j.model.openai.OpenAiChatModelName.GPT_4_O_MINI;
 
 @Slf4j
 @RestController
-@RequestMapping("/test")
-public class TestEndpoint {
+@RequestMapping("/test_old")
+public class TestOldEndpoint {
 
     public static final String DB_URI = "neo4j+s://6a2ca604.databases.neo4j.io";
     public static final String DB_USER = "neo4j";
@@ -147,7 +146,7 @@ public class TestEndpoint {
 
         createNode(driver.session(), filePath, "File", Map.of("uri", filePath));
         //Store to Neo4j
-        //storeBlocksToNeo4J(blocks, filePath);
+        storeBlocksToNeo4J(blocks, filePath);
 
         //TODO!!!
         // 1. Не включає закриваючу скобку метода }
@@ -189,13 +188,13 @@ public class TestEndpoint {
         return ResponseEntity.ok(jsonNode);
     }
 
-    private List<String> prependLineNumbers(List<String> lines) {
+    public static List<String> prependLineNumbers(List<String> lines) {
         AtomicInteger lineNumber = new AtomicInteger(1);
         List<String> linesWithNumbers = lines.stream().map(line -> String.format("%03d: %s", lineNumber.getAndIncrement(), line)).toList();
         return linesWithNumbers;
     }
 
-    private String merge(List<String> lines) {
+    public static String merge(List<String> lines) {
         return String.join("\n", lines);
     }
 
@@ -370,7 +369,7 @@ public class TestEndpoint {
         //4. Pass File content + JsonSchema to LLM
 
         ChatLanguageModel chatModel = GoogleAiGeminiChatModel.builder() // see [1] below
-                .apiKey("AIzaSyC5kgYlvopY75ESjoCT9V46u73ZgKDQXlg")
+                .apiKey("")
                 .modelName("gemini-1.5-flash")
                 .responseFormat(ResponseFormat.JSON) // see [2] below
                 //.strictJsonSchema(true) // see [2] below
@@ -806,7 +805,7 @@ public class TestEndpoint {
     }
 
     @GetMapping("test_pojo_openai")
-    public ResponseEntity<KBSchemaModels.JavaClassBlocks> testPojo(@RequestParam String filePath)  throws IOException{
+    public ResponseEntity<JavaClassSchema.JavaClassBlocks> testPojo(@RequestParam String filePath)  throws IOException{
         //#1
         Path pathToFile = Paths.get(filePath);
         List<String> lines = Files.readAllLines(pathToFile);
@@ -821,14 +820,14 @@ public class TestEndpoint {
                 .logResponses(true)
                 .build();
 
-        KBSchemaModels.JavaBlocksExtractor blocksExtractor = AiServices.create(KBSchemaModels.JavaBlocksExtractor.class, chatModel);
+        JavaClassSchema.JavaClassBlocksExtractor blocksExtractor = AiServices.create(JavaClassSchema.JavaClassBlocksExtractor.class, chatModel);
 
-        KBSchemaModels.JavaClassBlocks blocks = blocksExtractor.extractBlocks(contentWithLines);
+        JavaClassSchema.JavaClassBlocks blocks = blocksExtractor.extractBlocks(contentWithLines);
         return ResponseEntity.ok(blocks);
     }
 
     @GetMapping("test_pojo_gemini")
-    public ResponseEntity<KBSchemaModels.JavaClassBlocks> testPojoGemini(@RequestParam String filePath) throws IOException {
+    public ResponseEntity<JavaClassSchema.JavaClassBlocks> testPojoGemini(@RequestParam String filePath) throws IOException {
         //get file type
         //get root nodes according to file type
         //expand root nodes recursively
@@ -840,7 +839,7 @@ public class TestEndpoint {
 
 
         ChatLanguageModel chatModel = GoogleAiGeminiChatModel.builder() // see [1] below
-                .apiKey("")
+                .apiKey("AIzaSyC5kgYlvopY75ESjoCT9V46u73ZgKDQXlg")
                 .modelName("gemini-1.5-flash")
                 .responseFormat(ResponseFormat.JSON) // see [2] below
                 //.strictJsonSchema(true) // see [2] below
@@ -849,9 +848,9 @@ public class TestEndpoint {
                 //.topP(0.1)
                 .build();
 
-        KBSchemaModels.JavaBlocksExtractor blocksExtractor = AiServices.create(KBSchemaModels.JavaBlocksExtractor.class, chatModel);
+        JavaClassSchema.JavaClassBlocksExtractor blocksExtractor = AiServices.create(JavaClassSchema.JavaClassBlocksExtractor.class, chatModel);
 
-        KBSchemaModels.JavaClassBlocks blocks = blocksExtractor.extractBlocks(contentWithLines);
+        JavaClassSchema.JavaClassBlocks blocks = blocksExtractor.extractBlocks(contentWithLines);
         return ResponseEntity.ok(blocks);
     }
 
